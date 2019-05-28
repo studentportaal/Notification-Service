@@ -1,4 +1,4 @@
-export class Notification{
+export class changeNotification{
 
     userid: string;
     read: boolean;
@@ -9,6 +9,4 @@ export class Notification{
         this.read = read;
         this.jobofferid = jobofferid;
     }
-    
-    
 }
