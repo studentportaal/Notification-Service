@@ -3,7 +3,7 @@ import { changeNotification } from './models/notification';
 import Firebase from './Firebase';
 import { DocumentData } from '@google-cloud/firestore';
 
-export const createNotification = functions.https.onRequest((req, res) => {
+export const createNotification = functions.region('europe-west1').https.onRequest((req, res) => {
     
     res.set('Access-Control-Allow-Origin', '*');
 
@@ -31,7 +31,34 @@ export const createNotification = functions.https.onRequest((req, res) => {
 
 });
 
-export const getNotifications = functions.https.onRequest((req, res) => {
+export const sendPushNotification = functions.region('europe-west1').firestore.document('notifications/{token}').onCreate((snap, context) =>{
+    
+    const notification = snap.data();
+
+    if(notification !== undefined){
+
+        const payload = {
+            notification: {
+                title: 'Vacature verandering',
+                body: `De status van de vacature ${notification.joboffername} is veranderd`
+            }
+        }
+
+        Firebase.database().ref(`/fcmTokens/${notification.userid}`).once('value')
+        .then((token) => token.val() )
+        .then(userFcmToken => {
+            return Firebase.messaging().sendToDevice(userFcmToken, payload);
+        })
+        .then(res => {
+            console.log("Sent Sucessfully", res)
+        })
+        .catch(err => {
+            console.log(err)
+        })
+    }
+})
+
+export const getNotifications = functions.region('europe-west1').https.onRequest((req, res) => {
 
     res.set('Access-Control-Allow-Origin', '*');
     
@@ -66,7 +93,7 @@ export const getNotifications = functions.https.onRequest((req, res) => {
     }
 })
 
-export const editNotification = functions.https.onRequest((req, res) => {
+export const editNotification = functions.region('europe-west1').https.onRequest((req, res) => {
     
     res.set('Access-Control-Allow-Origin', '*');
 
